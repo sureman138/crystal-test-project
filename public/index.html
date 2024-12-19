@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+<h1>Hello</h1>
+<div>
+    <canvas id="myChart" width="800" height="400"></canvas>
+</div>
+
+</html>
+
+<script>
+
+    async function fetchProductPrices() {
+        try {
+            const response = await fetch('/scraped-data');
+            const bikePrices = await response.json();
+            const distinctCreatedAt = [...new Set(bikePrices.map(bike => formatTimestamp(bike.created_at)))];
+
+            const ctx = document.getElementById('myChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: distinctCreatedAt,
+                    datasets: [{
+                        label: 'Bike 1',
+                        data: bikePrices.filter(bike => bike.name === 'Bike 1').map(bike => bike.price),
+                        borderWidth: 1
+                    }, {
+                        label: 'Bike 2',
+                        data: bikePrices.filter(bike => bike.name === 'Bike 2').map(bike => bike.price),
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Bike 3',
+                        data: bikePrices.filter(bike => bike.name === 'Bike 3').map(bike => bike.price),
+                        borderWidth: 1
+                    },
+                    ]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Price'
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error fetching bike prices:', error);
+        }
+    }
+
+    function formatTimestamp(timestamp) {
+        const date = new Date(timestamp);
+        return date.toLocaleString();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchProductPrices();
+    });
+</script>
