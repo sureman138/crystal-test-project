@@ -9,9 +9,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
-<h1>Hello</h1>
+<h1 style="text-align: center;">Bike Price Data</h1>
 <div>
-    <canvas id="myChart" width="800" height="400"></canvas>
+    <canvas id="myChart" width="1000" height="500" style="margin: 0 auto;"></canvas>
+    <button onclick="executeManualScrape()" style="margin: 0 auto; display: flex; margin-top: 20px; font: 1em sans-serif; color: white; background-color: #007bff; border: none; padding: 10px 20px; cursor: pointer;">Trigger Scrape</button>
 </div>
 
 </html>
@@ -20,32 +21,34 @@
 
     async function fetchProductPrices() {
         try {
-            const response = await fetch('/scraped-data');
+            const response = await fetch('/get-bike-prices');
             const bikePrices = await response.json();
             const distinctCreatedAt = [...new Set(bikePrices.map(bike => formatTimestamp(bike.created_at)))];
+            const distinctNames = [...new Set(bikePrices.map(bike => bike.name))];
 
             const ctx = document.getElementById('myChart').getContext('2d');
-            new Chart(ctx, {
+            priceChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: distinctCreatedAt,
                     datasets: [{
-                        label: 'Bike 1',
-                        data: bikePrices.filter(bike => bike.name === 'Bike 1').map(bike => bike.price),
+                        label: distinctNames[0],
+                        data: bikePrices.filter(bike => bike.name === distinctNames[0]).map(bike => bike.price),
                         borderWidth: 1
                     }, {
-                        label: 'Bike 2',
-                        data: bikePrices.filter(bike => bike.name === 'Bike 2').map(bike => bike.price),
+                        label: distinctNames[1],
+                        data: bikePrices.filter(bike => bike.name === distinctNames[1]).map(bike => bike.price),
                         borderWidth: 1
                     },
                     {
-                        label: 'Bike 3',
-                        data: bikePrices.filter(bike => bike.name === 'Bike 3').map(bike => bike.price),
+                        label: distinctNames[2],
+                        data: bikePrices.filter(bike => bike.name === distinctNames[2]).map(bike => bike.price),
                         borderWidth: 1
                     },
                     ]
                 },
                 options: {
+                    responsive: true,
                     scales: {
                         x: {
                             beginAtZero: true,
@@ -55,7 +58,9 @@
                             }
                         },
                         y: {
-                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 50
+                            },
                             title: {
                                 display: true,
                                 text: 'Price'
@@ -66,6 +71,18 @@
             });
         } catch (error) {
             console.error('Error fetching bike prices:', error);
+        }
+    }
+
+    async function executeManualScrape() {
+        try {
+            const response = await fetch('/manual-scrape');
+            const data = await response.json();
+            console.log(data);
+            priceChart.destroy();
+            fetchProductPrices();
+        } catch (error) {
+            console.error('Error executing manual scrape:', error);
         }
     }
 
